@@ -15,7 +15,6 @@ from ext.view import MyAPIView, ORPerAPIView
 from ext.throttle import IpThrottle, UserThrottle, VipThrottle
 from ext.hook import HookSerializer
 
-
 class CarmiInfoSerializer(HookSerializer, serializers.ModelSerializer):
     """获取卡密时候的序列化操作"""
 
