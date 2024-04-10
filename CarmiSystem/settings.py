@@ -84,6 +84,7 @@ DATABASES = {
         "USER": "root",
         "PASSWORD": "yaung",
         # "HOST": "127.0.0.1",
+        "HOST": "10.0.8.17",
         "PORT": 3306,
     }
     # VMwareubuntu22.04
@@ -142,7 +143,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         # "LOCATION": "redis://127.0.0.1:6379",
-        "LOCATION": "redis://0.0.0.0:6379",
+        "LOCATION": "redis://10.0.8.17:6379",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": "yaung"
