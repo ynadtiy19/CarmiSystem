@@ -15,6 +15,7 @@ from ext.view import MyAPIView, ORPerAPIView
 from ext.throttle import IpThrottle, UserThrottle, VipThrottle
 from ext.hook import HookSerializer
 
+
 class CarmiInfoSerializer(HookSerializer, serializers.ModelSerializer):
     """获取卡密时候的序列化操作"""
 
@@ -69,7 +70,7 @@ class CarmiInfoView(ORPerAPIView):
         # 序列化
         ser = CarmiInfoSerializer(instance=queryset, many=True)
         context = {"code": code.SUCCESSFUL_CODE, "data": ser.data}
-        return Response(context)
+        return Response(context, content_type="application/json;charset=utf-8")
 
     # 传入生成个数和天数
     def post(self, request, *args, **kwargs):
@@ -141,7 +142,7 @@ class CarmiInfoDetailSerializer(HookSerializer, serializers.ModelSerializer):
 class CarmiInfoDetailView(ORPerAPIView):
     """单卡密信息操作"""
     permission_classes = [ManagerPermission, VipPermission]  # 管理员和会员
-    throttle_classes = [VipThrottle]  # 不限流
+    throttle_classes = [VipThrottle]
 
     def get(self, request, *args, **kwargs):
         # 获取卡密信息
@@ -314,7 +315,7 @@ class RegisterView(MyAPIView):
     """用户注册"""
     authentication_classes = []  # 不需要token认证
     permission_classes = []  # 无权限限制
-    throttle_classes = [IpThrottle, ]  # 不限流
+    throttle_classes = [IpThrottle, ]  # ip流
 
     def post(self, request, *args, **kwargs):
         # 数据校验
