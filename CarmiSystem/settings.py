@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     # "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    'django_filters',
     "web.apps.WebConfig",
 ]
 
@@ -85,6 +86,7 @@ DATABASES = {
         "PASSWORD": "yaung",
         # "HOST": "127.0.0.1",
         "HOST": "10.0.8.17",
+        # "HOST": "82.156.255.128",
         "PORT": 3306,
     }
     # VMwareubuntu22.04
@@ -145,6 +147,7 @@ CACHES = {
         "BACKEND": "django_redis.cache.RedisCache",
         # "LOCATION": "redis://127.0.0.1:6379",
         "LOCATION": "redis://10.0.8.17:6379",
+        # "LOCATION": "redis://82.156.255.128:6379",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": "yaung"
@@ -185,11 +188,23 @@ REST_FRAMEWORK = {
     # URL版本参数名
     "VERSION_PARAM": "version",
     # 允许的版本
-    "ALLOWED_VERSIONS": ["v1", "v2", ],
+    "ALLOWED_VERSIONS": ["1.0", "2.0", ],
     # 不传入版本时候的默认版本
-    "DEFAULT_VERSION": "v1",
+    "DEFAULT_VERSION": "1.0",
     # 解析器
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser", ],
     # 根据请求，匹配对应的解析器；寻找渲染器
     "DEFAULT_CONTENT_NEGOTIATION_CLASS": "rest_framework.negotiation.DefaultContentNegotiation",
+    # 分页
+    # "PAGE_SIZE": 5,
+    # 渲染器
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    # 条件搜索
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
+
 }
