@@ -32,3 +32,9 @@ class ManagerPermission(BasePermission):
         if request.user.role == 1:
             return True
         return False
+
+class DocPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.user.role == 1 or request.user.role == 2:
+            return True
+        return False

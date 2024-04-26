@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     # "django.contrib.sessions",
     # "django.contrib.messages",
     "django.contrib.staticfiles",
+    'drf_yasg',
     "rest_framework",
     'django_filters',
     "web.apps.WebConfig",
@@ -177,8 +178,8 @@ REST_FRAMEWORK = {
     # 限流配置
     "DEFAULT_THROTTLE_RATES": {
         "ip": "5/m",
-        "user": "10/m",
-        "vip": "15/m",
+        "user": "20/m",
+        "vip": "50/m",
     },
     # 版本获取形式
     # QueryParameterVersioning  # 读取get请求参数的version信息
@@ -206,5 +207,7 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
+    # 自动生成API接口文档
+    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.AutoSchema",
 
 }

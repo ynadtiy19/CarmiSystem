@@ -17,7 +17,26 @@ Including another URLconf
 # from django.contrib import admin
 from django.urls import path, re_path, include
 from rest_framework import routers
+from rest_framework.documentation import include_docs_urls
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+from ext.per import DocPermission
 from web import views
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="CarmiSystem API接口文档",
+        default_version='1.0',
+        description="描述信息",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="1422699629@qq.com"),
+        license=openapi.License(name="协议版本"),
+    ),
+    public=True,
+    # authentication_classes=[],
+    permission_classes=[DocPermission],
+)
 
 # router = routers.SimpleRouter()
 # router.register(r"carmiinfo", views.CarmiInfoView)
@@ -34,6 +53,8 @@ urlpatterns = [
     # path("avatar/", views.AvatarView.as_view()),
     # URL路由带参
     # path("api/<str:version>/home/", views.HomeView.as_view(), name="home"),
+    path('doc/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path("docs/", include_docs_urls(title="CarmiSystem API接口文档")),
     # 注册
     path("api/<str:version>/register/", views.RegisterView.as_view()),
     # 登录

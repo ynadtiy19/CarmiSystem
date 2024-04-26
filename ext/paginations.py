@@ -60,7 +60,7 @@ class CarmiInfoCursorPagination(MyCursorPagination):
     max_page_size = 100
 
     cursor_query_param = 'cursor'
-    ordering = 'carmi_buy_status'
+    ordering = "id"
 
 
 class CarmiGenLogCursorPagination(MyCursorPagination):

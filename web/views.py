@@ -42,7 +42,8 @@ class CarmiInfoView(ORPerGenericViewSet):
     filterset_class = CarmiInfoFilterSet
 
     # 先找没买的,再找没使用的,最后找id最小即最早的卡密
-    queryset = models.CarmiInfo.objects.all().order_by("carmi_buy_status", "carmi_use_status", "id")
+    # queryset = models.CarmiInfo.objects.all().order_by("carmi_buy_status", "carmi_use_status", "id")
+    queryset = models.CarmiInfo.objects.all()
     serializer_class = CarmiInfoSerializer
 
     # 卡密信息的获取
@@ -318,7 +319,7 @@ class CarmiBuyView(ORPerGenericViewSet):
 
 
 class CarmiBuyLogView(ORPerGenericViewSet):
-    """用户购买卡密"""
+    """用户购买卡密日志信息操作"""
     # 三大认证
     permission_classes = [VipPermission, ManagerPermission]  # 管理员和会员
     throttle_classes = [VipThrottle]
