@@ -40,6 +40,6 @@ class CarmiBuyLog(models.Model):
 class CarmiUseLog(models.Model):
     """卡密使用记录"""
     carmi_code = models.ForeignKey(verbose_name="卡密", to="CarmiInfo", on_delete=models.CASCADE)
-    using_machine = models.CharField(verbose_name="使用机器", max_length=64, null=True, db_index=True, unique=True)
+    using_machine = models.CharField(verbose_name="使用机器", max_length=64, null=True, db_index=True)
     using_time = models.DateTimeField(verbose_name="使用时间", null=True)
     due_time = models.DateTimeField(verbose_name="到期时间", null=True)

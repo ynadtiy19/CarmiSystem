@@ -379,7 +379,8 @@ class CarmiUseView(ORPerGenericViewSet):
 
         :return: 登陆成功/登陆失败
         """
-        using_machine = request.data.get("using_machine")
+        # using_machine = request.data.get("using_machine")
+        using_machine = request.query_params.get("using_machine")
         # 查看redis中是否存在这个机器码
         if self.r.exists(using_machine):
             return Response({"code": code.SUCCESSFUL_CODE, "detail": "登陆成功！"})
@@ -394,12 +395,14 @@ class CarmiUseView(ORPerGenericViewSet):
         """
         # 获取验证通过的数据
         # 获取卡密和机器码
-        # carmi_code = kwargs.get("carmi_code")
-        # machine_code = kwargs.get("machine_code")
+        # url中获取参数
+        carmi_code = request.query_params.get("carmi_code")
+        using_machine = request.query_params.get("using_machine")
         # 94efab65b7fe4096af6a0ac3ac3eea5f
-        carmi_code = request.data.get("carmi_code")
+        # carmi_code = request.data.get("carmi_code")
         # 08:00:20:0A:8C:6D
-        using_machine = request.data.get("using_machine")
+        # using_machine = request.data.get("using_machine")
+        # print(carmi_code, using_machine)
 
         # 判断卡密是否存在
         carmi = self.get_queryset().filter(carmi_code=carmi_code).first()
