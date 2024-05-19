@@ -2,6 +2,7 @@ import datetime
 import uuid
 
 from django.db.models import Count
+from django.http import JsonResponse
 
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -30,6 +31,10 @@ from ext.paginations import CarmiInfoPageNumberPagination, CarmiInfoLimitOffsetP
     CarmiGenLogCursorPagination, CarmiBuyLogCursorPagination, UserInfoPageNumberPagination, \
     CarmiBuyPageNumberPagination
 from ext.djangofilters import CarmiGenLogFilterSet, CarmiBuyLogFilterSet, CarmiInfoFilterSet, UserInfoFilterSet
+
+
+def test_cors(request):
+    return JsonResponse({'msg': 'CORS is ok'})
 
 
 class CarmiInfoView(ORPerGenericViewSet):
@@ -261,7 +266,7 @@ class CarmiBuyView(ORPerGenericViewSet):
         carmi_buy_counts = ser.validated_data.get('carmi_buy_counts')
         # 根据时长和数量筛选卡密
         buyed_carmis = models.CarmiInfo.objects.filter(carmi_duration=carmi_duration, carmi_buy_status=0)[
-                         :carmi_buy_counts]
+                       :carmi_buy_counts]
 
         if not buyed_carmis.exists():
             return Response({'detail': '该时长的卡密已全部购买'}, status=status.HTTP_400_BAD_REQUEST)
@@ -270,7 +275,6 @@ class CarmiBuyView(ORPerGenericViewSet):
         for carmi in buyed_carmis:
             carmi.carmi_buy_status = 1
             carmi.save()
-
 
         # 获取当前用户实例（假设根据用户名获取用户实例）
         buying_user = UserInfo.objects.get(username=request.user.username)
@@ -321,7 +325,7 @@ class CarmiBuyView(ORPerGenericViewSet):
 class CarmiBuyLogView(ORPerGenericViewSet):
     """用户购买卡密日志信息操作"""
     # 三大认证
-    permission_classes = [VipPermission, ManagerPermission]  # 管理员和会员
+    permission_classes = [UserPermission, VipPermission, ManagerPermission]  # 用户、管理员和会员
     throttle_classes = [VipThrottle]
 
     # 条件筛选
@@ -352,6 +356,7 @@ class CarmiBuyLogView(ORPerGenericViewSet):
 
 class CarmiUseSerializer(serializers.ModelSerializer):
     """使用卡密序列化器"""
+
     # 自定义字段
     # generate_user = serializers.CharField(source="generate_useID.account")
     # using_user = serializers.CharField(source="generate_useID.account")
@@ -461,8 +466,9 @@ class LoginView(MyAPIView):
         token = str(uuid.uuid4())
         instance.token = token
         instance.save()
+        ser1 = LoginSerializer(instance=instance)
 
-        return Response({"code": code.SUCCESSFUL_CODE, "token": token})
+        return Response({"code": code.SUCCESSFUL_CODE, "token": token, "role": ser1.data["role"]})
 
 
 class UserInfoView(UpdateModelMixin, ORPerGenericViewSet):

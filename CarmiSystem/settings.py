@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,7 +24,7 @@ SECRET_KEY = "django-insecure-$8hqawp4-lctfc)0tlxv807mipv-!umc4!qke%!z8o(8u&6%uy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["82.156.255.128"]
+# ALLOWED_HOSTS = ["82.156.255.128"]
 
 # Application definition
 
@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     # "django.contrib.sessions",
     # "django.contrib.messages",
     "django.contrib.staticfiles",
+    'corsheaders',
     'drf_yasg',
     "rest_framework",
     'django_filters',
@@ -44,8 +45,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     # "django.contrib.auth.middleware.AuthenticationMiddleware",
     # "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -56,7 +58,7 @@ ROOT_URLCONF = "CarmiSystem.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / 'templates'],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -85,8 +87,8 @@ DATABASES = {
         "NAME": "CarmiSysBases",
         "USER": "root",
         "PASSWORD": "yaung",
-        # "HOST": "127.0.0.1",
-        "HOST": "10.0.8.17",
+        "HOST": "127.0.0.1",
+        # "HOST": "10.0.8.17",
         # "HOST": "82.156.255.128",
         "PORT": 3306,
     }
@@ -125,7 +127,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # LANGUAGE_CODE = "en-us"
 LANGUAGE_CODE = "zh-hans"
 
-TIME_ZONE = "UTC"
+# TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Shanghai"
 
 USE_I18N = True
 
@@ -135,7 +138,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = "static/"
+STATIC_ROOT = "/data/CarmiSystem_static/static"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -146,16 +149,49 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        # "LOCATION": "redis://127.0.0.1:6379",
-        "LOCATION": "redis://10.0.8.17:6379",
-        # "LOCATION": "redis://82.156.255.128:6379",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        # "LOCATION": "redis://10.0.8.17:6379/0",
+        # "LOCATION": "redis://82.156.255.128:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "PASSWORD": "yaung"
         }
     }
 }
+"""
+#####################Cors配置#####################
 
+"""
+# 布尔值默认False 如果为True 白名单不启用
+CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_WHITELIST = ["https://127.0.0.1:5000"]
+# 默认可以使用的非标准请求头，需要使用自定义请求头时，就可以进行修改
+CORS_ALLOW_HEADERS = (
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+)
+# 默认请求方法
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+)
+# 申请缓存options的时间，默认 86400s
+CORS_PREFLIGHT_MAX_AGE = 86400
+# 需要前端接受的特殊的请求头
+CORS_EXPOSE_HEADERS = []
+# 是否获取浏览器的cookie，布尔值，默认False
+CORS_ALLOW_CREDENTIALS = True
 """
 #####################drf配置#####################
 "UNAUTHENTICATED_USER"：属于匿名用户，可以是一个函数引用或者None
