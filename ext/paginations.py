@@ -89,6 +89,15 @@ class CarmiBuyLogCursorPagination(MyCursorPagination):
     ordering = '-buying_time'
 
 
+class CarmiUseLogCursorPagination(MyCursorPagination):
+    page_size = 10
+    page_size_query_param = 'size'
+    max_page_size = 100
+
+    cursor_query_param = 'cursor'
+    ordering = '-using_time'
+
+
 class UserInfoPageNumberPagination(MyPageNumberPagination):
     page_size = 10
     page_size_query_param = 'size'

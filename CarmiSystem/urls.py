@@ -85,5 +85,6 @@ urlpatterns = [
     # path("api/<str:version>/carmiuse/",
     #      views.CarmiUseView.as_view({"patch": "partial_update"})),
     # 使用卡密日志信息
+    path("api/<str:version>/carmiuselog/", views.CarmiUseLogView.as_view({"get": "list"})),
 
 ]

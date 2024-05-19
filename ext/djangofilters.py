@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import FilterSet, filters
 
-from web.models import CarmiGenLog, CarmiBuyLog, CarmiInfo, UserInfo
+from web.models import CarmiGenLog, CarmiBuyLog, CarmiInfo, UserInfo, CarmiUseLog
 
 
 class CarmiInfoFilterSet(FilterSet):
@@ -44,6 +44,23 @@ class CarmiBuyLogFilterSet(FilterSet):
     class Meta:
         model = CarmiBuyLog
         fields = ["carmi_code", "buying_user", "buying_time_gte", "buying_time_lte"]
+
+
+class CarmiUseLogFilterSet(FilterSet):
+    carmi_code = filters.CharFilter(field_name="carmi_code__carmi_code", lookup_expr="exact")
+    using_machine = filters.CharFilter(field_name="using_machine", lookup_expr="icontains")
+    # 大于等于
+    using_time_gte = filters.DateTimeFilter(field_name="using_time", lookup_expr="gte")
+    # 小于等于
+    using_time_lte = filters.DateTimeFilter(field_name="using_time", lookup_expr="lte")
+    # 大于等于
+    due_time_gte = filters.DateTimeFilter(field_name="due_time", lookup_expr="gte")
+    # 小于等于
+    due_time_lte = filters.DateTimeFilter(field_name="due_time", lookup_expr="lte")
+
+    class Meta:
+        model = CarmiUseLog
+        fields = ["carmi_code", "using_machine", "using_time_gte", "using_time_lte", "due_time_gte", "due_time_lte"]
 
 
 class UserInfoFilterSet(FilterSet):

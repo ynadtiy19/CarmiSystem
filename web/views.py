@@ -25,13 +25,15 @@ from ext import code
 from ext.per import UserPermission, VipPermission, ManagerPermission
 from ext.view import MyAPIView, ORPerAPIView, MyGenericViewSet, ORPerGenericViewSet
 from ext.serializers import CarmiInfoSerializer, RegisterSerializer, LoginSerializer, \
-    CarmiGenLogSerializer, CarmiBuySerializer, CarmiBuyLogSerializer, UserInfoSerializer, CarmiBuyDetailSerializer
+    CarmiGenLogSerializer, CarmiBuySerializer, CarmiBuyLogSerializer, UserInfoSerializer, CarmiBuyDetailSerializer, \
+    CarmiUseSerializer, CarmiUseLogSerializer
 from ext.throttle import IpThrottle, UserThrottle, VipThrottle
 from ext.hook import HookSerializer
 from ext.paginations import CarmiInfoPageNumberPagination, CarmiInfoLimitOffsetPagination, CarmiInfoCursorPagination, \
     CarmiGenLogCursorPagination, CarmiBuyLogCursorPagination, UserInfoPageNumberPagination, \
-    CarmiBuyPageNumberPagination
-from ext.djangofilters import CarmiGenLogFilterSet, CarmiBuyLogFilterSet, CarmiInfoFilterSet, UserInfoFilterSet
+    CarmiBuyPageNumberPagination, CarmiUseLogCursorPagination
+from ext.djangofilters import CarmiGenLogFilterSet, CarmiBuyLogFilterSet, CarmiInfoFilterSet, UserInfoFilterSet, \
+    CarmiUseLogFilterSet
 
 
 def test_cors(request):
@@ -360,44 +362,6 @@ class CarmiBuyLogView(ORPerGenericViewSet):
         return pg.get_paginated_response(data=ser.data)
 
 
-class CarmiUseSerializer(HookSerializer, serializers.ModelSerializer):
-    """使用卡密序列化器"""
-
-    # 自定义字段
-    # generate_user = serializers.CharField(source="generate_useID.account")
-    # using_user = serializers.CharField(source="generate_useID.account")
-    using_machine = serializers.CharField(write_only=True)
-
-    # 自定义数据
-    # xxx = serializers.SerializerMethodField()
-    # carmi_status = serializers.SerializerMethodField()
-
-    class Meta:
-        model = models.CarmiInfo
-        # fields = "__all__"
-        fields = [
-            "carmi_code", "carmi_duration", "carmi_buy_status", "carmi_use_status", "using_machine",
-        ]
-        extra_kwargs = {
-            "carmi_code": {"write_only": True},
-            "carmi_duration": {"read_only": True},
-            "carmi_buy_status": {"read_only": True},
-            "carmi_use_status": {"read_only": True},
-        }
-
-    # 自定义钩子
-    def hook_carmi_buy_status(self, obj):
-        return obj.get_carmi_buy_status_display()
-
-    def hook_carmi_use_status(self, obj):
-        return obj.get_carmi_use_status_display()
-
-    # 自定义数据处理方法
-    # def get_xxx(self, obj):
-    #     return "name:
-    # def get_status(self, obj):
-    #     return obj.get_carmi_status_display()
-
 
 class CarmiUseView(ORPerGenericViewSet):
     """用户使用卡密"""
@@ -481,6 +445,36 @@ class CarmiUseView(ORPerGenericViewSet):
             return Response({'detail': '卡密不存在！'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class CarmiUseLogView(ORPerGenericViewSet):
+    """用户使用卡密日志信息操作"""
+    # 三大认证
+    permission_classes = [UserPermission, VipPermission, ManagerPermission]  # 用户、管理员和会员
+    throttle_classes = [VipThrottle]
+
+    # 条件筛选
+    # filter_backends = [DjangoFilterBackend,]
+    filterset_class = CarmiUseLogFilterSet
+
+    # 获取数据
+    queryset = models.CarmiUseLog.objects.all().order_by("-using_time")
+    serializer_class = CarmiUseLogSerializer
+
+    def list(self, request, *args, **kwargs):
+        # 更新创建时间
+        # models.CarmiInfo.objects.all().update(creat_time=datetime.datetime.now(), end_time=None)
+        # 获取数据库中数据，并且按照generating_time的时间降序排列，并且using_time为空的放在最上面
+        # queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # 分页器
+        pg = CarmiUseLogCursorPagination()
+        pager_queryset = pg.paginate_queryset(queryset=queryset, request=request, view=self)
+
+        # 序列化
+        ser = self.get_serializer(instance=pager_queryset, many=True)
+        # context = {"code": code.SUCCESSFUL_CODE, "data": ser.data}
+        # return Response(context)
+        return pg.get_paginated_response(data=ser.data)
 
 
 class RegisterView(MyAPIView):
@@ -533,8 +527,7 @@ class UserInfoView(UpdateModelMixin, ORPerGenericViewSet):
     # filter_backends = [DjangoFilterBackend,]
     filterset_class = UserInfoFilterSet
 
-    # 先找没买的,再找没使用的,最后找id最小即最早的卡密
-    queryset = models.UserInfo.objects.all().order_by("id")
+    queryset = models.UserInfo.objects.all()
     serializer_class = UserInfoSerializer
 
     def list(self, request, *args, **kwargs):
@@ -556,7 +549,7 @@ class UserInfoView(UpdateModelMixin, ORPerGenericViewSet):
         # 获取用户信息
         pk = kwargs.get("pk")  # viewset里面默认获取pk
         # 获取数据库中数据
-        instance = models.UserInfo.objects.filter(id=pk).first()
+        instance = models.UserInfo.objects.filter(username=pk).first()
         if not instance:
             return Response({"code": code.NODATA_CODE, "error": "用户不存在！"})
         # 序列化
@@ -566,11 +559,18 @@ class UserInfoView(UpdateModelMixin, ORPerGenericViewSet):
 
     # def update(self, request, *args, **kwargs):
     #     # 获取用户信息
-    #     pk = kwargs.get("pk")  # viewset里面默认获取pk
+    #     username = kwargs.get("username")  # viewset里面默认获取pk
     #     # 获取数据库中数据
-    #     instance = models.UserInfo.objects.filter(id=pk).first()
+    #     instance = models.UserInfo.objects.filter(username=username).first()
     #     if not instance:
     #         return Response({"code": code.NODATA_CODE, "error": "用户不存在！"})
+    #     instance = self.get_object()
+    #     serializer = self.get_serializer(instance=instance, data=request.data, partial=True)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_update(serializer)
+    #     return Response(serializer.data)
+
+
 
 
 """class HomeView(MyAPIView):

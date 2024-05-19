@@ -250,7 +250,8 @@ class CarmiBuyLogSerializer(HookSerializer, serializers.ModelSerializer):
     class Meta:
         model = models.CarmiBuyLog
         # fields = "__all__"
-        fields = ["id", "carmi_code_id", "carmi_code", "buying_user_id", "buying_user", "buying_time","carmi_duration","carmi_buy_status","carmi_use_status"]
+        fields = ["id", "carmi_code_id", "carmi_code", "buying_user_id", "buying_user", "buying_time", "carmi_duration",
+                  "carmi_buy_status", "carmi_use_status"]
 
     # 自定义钩子
     def hook_carmi_code(self, obj):
@@ -267,16 +268,87 @@ class CarmiBuyLogSerializer(HookSerializer, serializers.ModelSerializer):
 
     def hook_carmi_duration(self, obj):
         return obj.carmi_code.carmi_duration
+
     def hook_carmi_buy_status(self, obj):
         return obj.carmi_code.get_carmi_buy_status_display()
+
     def hook_carmi_use_status(self, obj):
         return obj.carmi_code.get_carmi_use_status_display()
-
-
 
     # 自定义数据处理方法
     # def get_carmi(self, obj):
     #     return obj.carmi.carmi_code
+
+
+class CarmiUseSerializer(HookSerializer, serializers.ModelSerializer):
+    """使用卡密序列化器"""
+
+    # 自定义字段
+    # generate_user = serializers.CharField(source="generate_useID.account")
+    # using_user = serializers.CharField(source="generate_useID.account")
+    using_machine = serializers.CharField(write_only=True)
+
+    # 自定义数据
+    # xxx = serializers.SerializerMethodField()
+    # carmi_status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.CarmiInfo
+        # fields = "__all__"
+        fields = [
+            "carmi_code", "carmi_duration", "carmi_buy_status", "carmi_use_status", "using_machine",
+        ]
+        extra_kwargs = {
+            "carmi_code": {"write_only": True},
+            "carmi_duration": {"read_only": True},
+            "carmi_buy_status": {"read_only": True},
+            "carmi_use_status": {"read_only": True},
+        }
+
+    # 自定义钩子
+    def hook_carmi_buy_status(self, obj):
+        return obj.get_carmi_buy_status_display()
+
+    def hook_carmi_use_status(self, obj):
+        return obj.get_carmi_use_status_display()
+
+    # 自定义数据处理方法
+    # def get_xxx(self, obj):
+    #     return "name:
+    # def get_status(self, obj):
+    #     return obj.get_carmi_status_display()
+
+
+class CarmiUseLogSerializer(HookSerializer, serializers.ModelSerializer):
+    # 自定义字段
+    # status = serializers.CharField(source="get_carmi_status_display")
+    using_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    due_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+
+    carmi_code_id = serializers.SerializerMethodField(source="carmi_code_id")
+    # buying_user_id = serializers.SerializerMethodField(source="buying_user_id")
+    carmi_duration = serializers.SerializerMethodField(source="carmi_duration")
+
+    # carmi_buy_status = serializers.SerializerMethodField(source="carmi_buy_status")
+    # carmi_use_status = serializers.SerializerMethodField(source="carmi_use_status")
+
+    # 自定义数据
+    # carmi = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.CarmiUseLog
+        # fields = "__all__"
+        fields = ["id", "carmi_code_id", "carmi_code", "carmi_duration", "using_machine", "using_time", "due_time"]
+
+    # 自定义钩子
+    def hook_carmi_code(self, obj):
+        return obj.carmi_code.carmi_code
+
+    def hook_carmi_code_id(self, obj):
+        return obj.carmi_code_id
+
+    def hook_carmi_duration(self, obj):
+        return obj.carmi_code.carmi_duration
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -317,7 +389,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     #     return obj.carmi.carmi_code
 
 
-class LoginSerializer(HookSerializer,serializers.ModelSerializer):
+class LoginSerializer(HookSerializer, serializers.ModelSerializer):
     # 自定义字段
     # status = serializers.CharField(source="get_carmi_status_display")
     # generating_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
@@ -354,7 +426,6 @@ class LoginSerializer(HookSerializer,serializers.ModelSerializer):
     #     return obj.carmi.carmi_code
     def hook_role(self, obj):
         return obj.get_role_display()
-
 
 
 class UserInfoSerializer(HookSerializer, serializers.ModelSerializer):
