@@ -57,3 +57,4 @@ class NOAuthentication(BaseAuthentication):
 
     def authenticate_header(self, request):
         return "AUTHORIZATION_ERROR"
+

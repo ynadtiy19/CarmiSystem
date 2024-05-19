@@ -365,8 +365,9 @@ class CarmiBuyLogView(ORPerGenericViewSet):
 
 class CarmiUseView(ORPerGenericViewSet):
     """用户使用卡密"""
-    permission_classes = [UserPermission, VipPermission, ManagerPermission]  # 用户和管理员和会员
-    throttle_classes = [UserThrottle]
+    authentication_classes = []  # 不需要token认证
+    permission_classes = []  # 不需要权限
+    throttle_classes = [IpThrottle] # 没有了token表明身份,只能通过ip来限流
 
     queryset = models.CarmiInfo.objects.all()
     serializer_class = CarmiUseSerializer
