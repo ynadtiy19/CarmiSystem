@@ -24,7 +24,7 @@ SECRET_KEY = "django-insecure-$8hqawp4-lctfc)0tlxv807mipv-!umc4!qke%!z8o(8u&6%uy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["82.156.255.128"]
+# ALLOWED_HOSTS = ["82.156.255.128"]
 
 # Application definition
 
@@ -87,8 +87,8 @@ DATABASES = {
         "NAME": "CarmiSysBases",
         "USER": "root",
         "PASSWORD": "yaung",
-        # "HOST": "127.0.0.1",
-        "HOST": "10.0.8.17",
+        "HOST": "127.0.0.1",
+        # "HOST": "10.0.8.17",
         # "HOST": "82.156.255.128",
         "PORT": 3306,
     }
@@ -137,7 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = None
+STATIC_URL = "venv/"
 STATIC_ROOT = "/data/CarmiSystem_static/static"
 
 # Default primary key field type
@@ -149,8 +149,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        # "LOCATION": "redis://127.0.0.1:6379/0",
-        "LOCATION": "redis://10.0.8.17:6379/0",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        # "LOCATION": "redis://10.0.8.17:6379/0",
         # "LOCATION": "redis://82.156.255.128:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
