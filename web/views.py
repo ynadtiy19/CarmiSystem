@@ -372,7 +372,8 @@ class CarmiUseView(ORPerGenericViewSet):
     queryset = models.CarmiInfo.objects.all()
     serializer_class = CarmiUseSerializer
 
-    r = redis.StrictRedis(host='localhost', port=6379, db=1, password='yaung')
+    # r = redis.StrictRedis(host='localhost', port=6379, db=1, password='yaung')
+    r = redis.StrictRedis(host='10.0.8.17', port=6379, db=1, password='yaung')
 
     def list(self, request, *args, **kwargs):
         """验证机器码的可用性
