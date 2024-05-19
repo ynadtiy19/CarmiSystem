@@ -53,7 +53,7 @@ urlpatterns = [
     # path("avatar/", views.AvatarView.as_view()),
     # URL路由带参
     # path("api/<str:version>/home/", views.HomeView.as_view(), name="home"),
-    path("test_cors/", views.test_cors),
+    # path("test_cors/", views.test_cors),
     path('doc/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path("docs/", include_docs_urls(title="CarmiSystem API接口文档")),
     # 注册
@@ -81,8 +81,8 @@ urlpatterns = [
     path("api/<str:version>/carmibuylog/", views.CarmiBuyLogView.as_view({"get": "list"})),
 
     # 使用卡密
-    # path("api/<str:version>/usercarmi/", views.UseCarmiView.as_view({"get": "list"})),
-    # path("api/<str:version>/carmiuse/<str:carmi_code>/<str:machine_code>",
+    path("api/<str:version>/carmiuse/", views.CarmiUseView.as_view({"get": "list", "post": "create"})),
+    # path("api/<str:version>/carmiuse/",
     #      views.CarmiUseView.as_view({"patch": "partial_update"})),
     # 使用卡密日志信息
 

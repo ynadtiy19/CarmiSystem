@@ -1,8 +1,9 @@
-import datetime
 import uuid
 
+import redis
 from django.db.models import Count
 from django.http import JsonResponse
+from django.utils import timezone
 
 from rest_framework import serializers, status
 from rest_framework.response import Response
@@ -104,7 +105,7 @@ class CarmiInfoView(ORPerGenericViewSet):
             gen_logs = [CarmiGenLog(
                 carmi_code=carmi,
                 generating_user=generating_user,
-                generating_time=datetime.datetime.now()  # 使用当前时间作为生成时间
+                generating_time=timezone.now()  # 使用当前时间作为生成时间
             ) for carmi in generated_carmis]
             CarmiGenLog.objects.bulk_create(gen_logs)
             # 序列化生成的卡密信息
@@ -231,6 +232,11 @@ class CarmiBuyView(ORPerGenericViewSet):
     serializer_class = CarmiBuyDetailSerializer
 
     def list(self, request, *args, **kwargs):
+        """获取可以购买卡密的信息
+        :param: None
+
+        :return: Json -> List<Map> -> {"carmi_duration": 120,"carmi_counts": 6}
+        """
         # 获取卡密时长和对应数量的字典列表
         carmi_duration_counts = self.get_queryset().values('carmi_duration').annotate(
             carmi_counts=Count('carmi_duration'))
@@ -283,7 +289,7 @@ class CarmiBuyView(ORPerGenericViewSet):
         buy_logs = [CarmiBuyLog(
             carmi_code=carmi,
             buying_user=buying_user,
-            buying_time=datetime.datetime.now()  # 使用当前时间作为生成时间
+            buying_time=timezone.now()  # 使用当前时间作为生成时间
         ) for carmi in buyed_carmis]
         CarmiBuyLog.objects.bulk_create(buy_logs)
         # 序列化生成的卡密信息
@@ -313,7 +319,7 @@ class CarmiBuyView(ORPerGenericViewSet):
         buy_logs = [CarmiBuyLog(
             carmi_code=carmi,
             buying_user=buying_user,
-            buying_time=datetime.datetime.now()  # 使用当前时间作为生成时间
+            buying_time=timezone.now()  # 使用当前时间作为生成时间
         )]
         CarmiBuyLog.objects.bulk_create(buy_logs)
 
@@ -354,12 +360,13 @@ class CarmiBuyLogView(ORPerGenericViewSet):
         return pg.get_paginated_response(data=ser.data)
 
 
-class CarmiUseSerializer(serializers.ModelSerializer):
+class CarmiUseSerializer(HookSerializer, serializers.ModelSerializer):
     """使用卡密序列化器"""
 
     # 自定义字段
     # generate_user = serializers.CharField(source="generate_useID.account")
     # using_user = serializers.CharField(source="generate_useID.account")
+    using_machine = serializers.CharField(write_only=True)
 
     # 自定义数据
     # xxx = serializers.SerializerMethodField()
@@ -369,11 +376,13 @@ class CarmiUseSerializer(serializers.ModelSerializer):
         model = models.CarmiInfo
         # fields = "__all__"
         fields = [
-            "id", "carmi_code", "carmi_duration", "carmi_buy_status", "carmi_use_status",
+            "carmi_code", "carmi_duration", "carmi_buy_status", "carmi_use_status", "using_machine",
         ]
         extra_kwargs = {
-            "id": {"read_only": True},
-            "carmi_code": {"read_only": True},
+            "carmi_code": {"write_only": True},
+            "carmi_duration": {"read_only": True},
+            "carmi_buy_status": {"read_only": True},
+            "carmi_use_status": {"read_only": True},
         }
 
     # 自定义钩子
@@ -395,39 +404,83 @@ class CarmiUseView(ORPerGenericViewSet):
     permission_classes = [UserPermission, VipPermission, ManagerPermission]  # 用户和管理员和会员
     throttle_classes = [UserThrottle]
 
-    # 先找没买的,再找没使用的,最后找id最小即最早的卡密
     queryset = models.CarmiInfo.objects.all()
     serializer_class = CarmiUseSerializer
 
-    def partial_update(self, request, *args, **kwargs):
+    r = redis.StrictRedis(host='localhost', port=6379, db=1, password='yaung')
+
+    def list(self, request, *args, **kwargs):
+        """验证机器码的可用性
+        :param: machine_code:机器码,
+
+        :return: 登陆成功/登陆失败
+        """
+        using_machine = request.data.get("using_machine")
+        # 查看redis中是否存在这个机器码
+        if self.r.exists(using_machine):
+            return Response({"code": code.SUCCESSFUL_CODE, "detail": "登陆成功！"})
+        return Response({"code": code.SUCCESSFUL_CODE, "detail": "登陆失败！请先充值！"})
+
+    def create(self, request, *args, **kwargs):
+        """使用卡密
+        :param: carmi_code:卡密号码,
+                machine_code:机器码,
+
+        :return: 卡密使用成功/卡密已经使用过了
+        """
+        # 获取验证通过的数据
         # 获取卡密和机器码
-        carmi_code = kwargs.get("carmi_code")
-        machine_code = kwargs.get("machine_code")
-        # 通过部分更新伪造购买请求
+        # carmi_code = kwargs.get("carmi_code")
+        # machine_code = kwargs.get("machine_code")
+        # 94efab65b7fe4096af6a0ac3ac3eea5f
+        carmi_code = request.data.get("carmi_code")
+        # 08:00:20:0A:8C:6D
+        using_machine = request.data.get("using_machine")
+
+        # 判断卡密是否存在
         carmi = self.get_queryset().filter(carmi_code=carmi_code).first()
+        if carmi:
+            """先修改数据信息，更新数据表"""
+            # print(carmi)
+            # 检查是否已经购买
+            if carmi.carmi_use_status == 1:
+                return Response({'detail': '该卡密已经使用过了！'}, status=status.HTTP_400_BAD_REQUEST)
+            # 进行部分更新
+            carmi.carmi_use_status = 1
+            carmi.save()
 
-        # 检查是否已经购买
-        if carmi.carmi_buy_status == 1:
-            return Response({'detail': '该卡密已经购买'}, status=status.HTTP_400_BAD_REQUEST)
+            # 计算due_time到期时间,30
+            due_time = timezone.now() + timezone.timedelta(seconds=carmi.carmi_duration*60*60*24)
+            print(timezone.now())
+            print(due_time)
 
-        # 进行部分更新
-        carmi.carmi_buy_status = 1
-        carmi.save()
+            # 更新使用数据表
+            use_logs = [CarmiUseLog(
+                carmi_code=carmi,
+                using_machine=using_machine,
+                using_time=timezone.now(),  # 使用当前时间作为生成时间
+                due_time=due_time
+            )]
+            CarmiUseLog.objects.bulk_create(use_logs)
 
-        # 获取当前用户实例（假设根据用户名获取用户实例）
-        buying_user = UserInfo.objects.get(username=request.user.username)
+            """将机器码存储到redis中，并且设置好到期时间"""
+            # 判断当前机器码是否已经存在于redis当中
+            if self.r.exists(using_machine):
+                # 获取机器码key的到期时间
+                due_time = self.r.ttl(using_machine)
+                # 根据carmi.carmi_duration增加到期时间
+                self.r.expire(using_machine, due_time+carmi.carmi_duration*60*60*24)
+            else:
+                self.r.set(using_machine, carmi_code, ex=carmi.carmi_duration*60*60*24)
 
-        # 更新购买数据表
-        buy_logs = [CarmiUseLog(
-            carmi_code=carmi,
-            buying_user=buying_user,
-            buying_time=datetime.datetime.now()  # 使用当前时间作为生成时间
-        )]
-        CarmiUseLog.objects.bulk_create(buy_logs)
+            # 返回部分更新后的数据
+            # serializer = self.get_serializer(carmi)
+            # return Response(serializer.data)
+            return Response({"code": code.SUCCESSFUL_CODE, "detail": "卡密使用成功"})
+        else:
+            return Response({'detail': '卡密不存在！'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 返回部分更新后的数据
-        serializer = self.get_serializer(carmi)
-        return Response(serializer.data)
+
 
 
 class RegisterView(MyAPIView):
