@@ -21,11 +21,10 @@ class ORPerAPIView(MyAPIView):
     def check_permissions(self, request):
         no_permission_object = []  # 保存没有权限的对象
         for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
+            if permission.has_permission(request, self):
+                return
+            else:
                 no_permission_object.append(permission)
-
-        if not no_permission_object:
-            return
 
         # 都没有权限执行这个抛出异常
         self.permission_denied(
@@ -47,11 +46,10 @@ class ORPerGenericViewSet(MyGenericViewSet):
     def check_permissions(self, request):
         no_permission_object = []  # 保存没有权限的对象
         for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
+            if permission.has_permission(request, self):
+                return
+            else:
                 no_permission_object.append(permission)
-
-        if not no_permission_object:
-            return
 
         # 都没有权限执行这个抛出异常
         self.permission_denied(

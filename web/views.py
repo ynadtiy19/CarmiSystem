@@ -362,12 +362,11 @@ class CarmiBuyLogView(ORPerGenericViewSet):
         return pg.get_paginated_response(data=ser.data)
 
 
-
-class CarmiUseView(ORPerGenericViewSet):
+class CarmiUseView(GenericViewSet):
     """用户使用卡密"""
     authentication_classes = []  # 不需要token认证
     permission_classes = []  # 不需要权限
-    throttle_classes = [IpThrottle] # 没有了token表明身份,只能通过ip来限流
+    throttle_classes = [IpThrottle]  # 没有了token表明身份,只能通过ip来限流
 
     queryset = models.CarmiInfo.objects.all()
     serializer_class = CarmiUseSerializer
@@ -419,7 +418,7 @@ class CarmiUseView(ORPerGenericViewSet):
             carmi.save()
 
             # 计算due_time到期时间,30
-            due_time = timezone.now() + timezone.timedelta(seconds=carmi.carmi_duration*60*60*24)
+            due_time = timezone.now() + timezone.timedelta(seconds=carmi.carmi_duration * 60 * 60 * 24)
             print(timezone.now())
             print(due_time)
 
@@ -438,9 +437,9 @@ class CarmiUseView(ORPerGenericViewSet):
                 # 获取机器码key的到期时间
                 due_time = self.r.ttl(using_machine)
                 # 根据carmi.carmi_duration增加到期时间
-                self.r.expire(using_machine, due_time+carmi.carmi_duration*60*60*24)
+                self.r.expire(using_machine, due_time + carmi.carmi_duration * 60 * 60 * 24)
             else:
-                self.r.set(using_machine, carmi_code, ex=carmi.carmi_duration*60*60*24)
+                self.r.set(using_machine, carmi_code, ex=carmi.carmi_duration * 60 * 60 * 24)
 
             # 返回部分更新后的数据
             # serializer = self.get_serializer(carmi)
@@ -574,8 +573,6 @@ class UserInfoView(UpdateModelMixin, ORPerGenericViewSet):
     #     serializer.is_valid(raise_exception=True)
     #     self.perform_update(serializer)
     #     return Response(serializer.data)
-
-
 
 
 """class HomeView(MyAPIView):
