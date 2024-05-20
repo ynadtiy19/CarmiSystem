@@ -385,7 +385,7 @@ class CarmiUseView(GenericViewSet):
         # 查看redis中是否存在这个机器码
         if self.r.exists(using_machine):
             return Response({"code": code.SUCCESSFUL_CODE, "detail": "登陆成功！"})
-        return Response({"code": code.SUCCESSFUL_CODE, "detail": "登陆失败！请先充值！"})
+        return Response({"code": code.MACHINE_LOGIN_FAIL_CODE, "detail": "登陆失败！请先充值！"}, status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         """使用卡密
@@ -412,7 +412,7 @@ class CarmiUseView(GenericViewSet):
             # print(carmi)
             # 检查是否已经购买
             if carmi.carmi_use_status == 1:
-                return Response({'detail': '该卡密已经使用过了！'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"code": code.CARMIUSE_USED_CODE,'detail': '该卡密已经使用过了！'}, status=status.HTTP_400_BAD_REQUEST)
             # 进行部分更新
             carmi.carmi_use_status = 1
             carmi.save()
@@ -446,7 +446,7 @@ class CarmiUseView(GenericViewSet):
             # return Response(serializer.data)
             return Response({"code": code.SUCCESSFUL_CODE, "detail": "卡密使用成功"})
         else:
-            return Response({'detail': '卡密不存在！'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"code": code.CARMIUSE_LOSE_CODE,'detail': '卡密不存在！'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CarmiUseLogView(ORPerGenericViewSet):
