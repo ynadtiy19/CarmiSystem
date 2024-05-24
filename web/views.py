@@ -1,6 +1,7 @@
 import uuid
 
 import redis
+from django.db import transaction
 from django.db.models import Count
 from django.http import JsonResponse
 from django.utils import timezone
@@ -272,32 +273,37 @@ class CarmiBuyView(ORPerGenericViewSet):
         carmi_duration = ser.validated_data.get('carmi_duration')
         carmi_counts = ser.validated_data.get('carmi_counts')
         carmi_buy_counts = ser.validated_data.get('carmi_buy_counts')
-        # 根据时长和数量筛选卡密
-        buyed_carmis = models.CarmiInfo.objects.filter(carmi_duration=carmi_duration, carmi_buy_status=0)[
-                       :carmi_buy_counts]
 
-        if not buyed_carmis.exists():
-            return Response({'detail': '该时长的卡密已全部购买'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            with transaction.atomic():
+                # 根据时长和数量筛选卡密
+                buyed_carmis = models.CarmiInfo.objects.filter(carmi_duration=carmi_duration, carmi_buy_status=0)[
+                               :carmi_buy_counts]
 
-        # 循环遍历buyed_carmis列表，将其carmi_buy_status属性修改为1
-        for carmi in buyed_carmis:
-            carmi.carmi_buy_status = 1
-            carmi.save()
+                if not buyed_carmis.exists():
+                    return Response({'detail': '该时长的卡密已全部购买'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 获取当前用户实例（假设根据用户名获取用户实例）
-        buying_user = UserInfo.objects.get(username=request.user.username)
+                # 循环遍历buyed_carmis列表，将其carmi_buy_status属性修改为1
+                for carmi in buyed_carmis:
+                    carmi.carmi_buy_status = 1
+                    carmi.save()
 
-        # 批量创建生成记录并保存到数据库
-        buy_logs = [CarmiBuyLog(
-            carmi_code=carmi,
-            buying_user=buying_user,
-            buying_time=timezone.now()  # 使用当前时间作为生成时间
-        ) for carmi in buyed_carmis]
-        CarmiBuyLog.objects.bulk_create(buy_logs)
-        # 序列化生成的卡密信息
-        serialized_data = self.get_serializer(buyed_carmis, many=True).data
+                # 获取当前用户实例（假设根据用户名获取用户实例）
+                buying_user = UserInfo.objects.get(username=request.user.username)
 
-        return Response({"code": code.SUCCESSFUL_CODE, "data": serialized_data})
+                # 批量创建生成记录并保存到数据库
+                buy_logs = [CarmiBuyLog(
+                    carmi_code=carmi,
+                    buying_user=buying_user,
+                    buying_time=timezone.now()  # 使用当前时间作为生成时间
+                ) for carmi in buyed_carmis]
+                CarmiBuyLog.objects.bulk_create(buy_logs)
+                # 序列化生成的卡密信息
+                serialized_data = self.get_serializer(buyed_carmis, many=True).data
+
+                return Response({"code": code.SUCCESSFUL_CODE, "data": serialized_data})
+        except Exception as e:
+                return Response({'detail': '购买失败，请重试'}, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, *args, **kwargs):
         # 购买具体单个卡密
