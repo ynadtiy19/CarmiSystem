@@ -275,6 +275,7 @@ class CarmiBuyView(ORPerGenericViewSet):
         carmi_buy_counts = ser.validated_data.get('carmi_buy_counts')
 
         try:
+            # 开启事务
             with transaction.atomic():
                 # 根据时长和数量筛选卡密
                 buyed_carmis = models.CarmiInfo.objects.filter(carmi_duration=carmi_duration, carmi_buy_status=0)[
