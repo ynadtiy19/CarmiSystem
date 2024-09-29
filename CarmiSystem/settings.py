@@ -24,7 +24,8 @@ SECRET_KEY = "django-insecure-$8hqawp4-lctfc)0tlxv807mipv-!umc4!qke%!z8o(8u&6%uy
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["82.156.255.128"]
+ALLOWED_HOSTS = ['carmisystem.onrender.com']
+
 
 # Application definition
 
