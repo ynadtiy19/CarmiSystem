@@ -78,21 +78,21 @@ WSGI_APPLICATION = "CarmiSystem.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    # "default": {
-    #     "ENGINE": "django.db.backends.sqlite3",
-    #     "NAME": BASE_DIR / "db.sqlite3",
-    # }
-    # myself
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "CarmiSysBases",
-        "USER": "root",
-        "PASSWORD": "yaung",
-        # "HOST": "127.0.0.1",
-        "HOST": "10.0.8.17",
-        # "HOST": "82.156.255.128",
-        "PORT": 3306,
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
+    # myself
+    # "default": {
+    #     "ENGINE": "django.db.backends.mysql",
+    #     "NAME": "CarmiSysBases",
+    #     "USER": "root",
+    #     "PASSWORD": "yaung",
+    #     # "HOST": "127.0.0.1",
+    #     "HOST": "10.0.8.17",
+    #     # "HOST": "82.156.255.128",
+    #     "PORT": 3306,
+    # }
     # VMwareubuntu22.04
     # "default": {
     #     "ENGINE": "django.db.backends.mysql",
